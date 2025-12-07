@@ -1,0 +1,224 @@
+{
+  "productInfo" : {
+    "company" : "HighByte",
+    "product" : "IntelligenceHub",
+    "version" : "4.3.1",
+    "build" : "2025.11.17.5",
+    "stage" : "Release"
+  },
+  "project" : {
+    "version" : 12,
+    "connections" : [ {
+      "name" : "CCDeventDB",
+      "uri" : "jdbc.sqlite://SQLiteConnection",
+      "description" : "SQLiteConnection to SQLiteTraceability database",
+      "tags" : [ "CCD" ],
+      "writes" : {
+        "flattenModeledValues" : false
+      },
+      "subscriptions" : { },
+      "storeForward" : {
+        "enabled" : false,
+        "maxEntries" : 100,
+        "waitOnFailureInterval" : {
+          "duration" : 1,
+          "units" : "Seconds"
+        }
+      },
+      "settings" : {
+        "strategy" : {
+          "type" : "default"
+        },
+        "database" : "C:\\Users\\koen_\\CCDeventlogDB.db"
+      }
+    } ],
+    "inputs" : [ {
+      "name" : "getCCDEvents",
+      "connection" : "CCDeventDB",
+      "type" : "jdbc.sqlite",
+      "qualifier" : {
+        "query" : "select * from tblCCD1events"
+      },
+      "cacheLifetime" : {
+        "enabled" : false
+      },
+      "template" : {
+        "type" : "Off"
+      },
+      "parameters" : {
+        "type" : "EmptyParameters"
+      }
+    } ],
+    "outputs" : [ {
+      "name" : "insertCCDEvent",
+      "connection" : "CCDeventDB",
+      "type" : "jdbc.sqlite",
+      "qualifier" : {
+        "writeType" : "insert",
+        "createOption" : "off",
+        "breakupArrays" : false,
+        "tableCacheInterval" : {
+          "duration" : 1,
+          "units" : "Hours"
+        },
+        "table" : "tblCCD1events",
+        "whereColumn" : "",
+        "logAsJSON" : false
+      }
+    } ],
+    "modeling" : {
+      "models" : [ ],
+      "instances" : [ ]
+    },
+    "conditions" : [ ],
+    "functions" : [ ],
+    "tags" : [ ],
+    "pipelines" : [ {
+      "name" : "getCCDEvents",
+      "description" : "get all CCD events from the SQlite database",
+      "groupAs" : "/CCD",
+      "tags" : [ "CCD" ],
+      "inputStages" : [ "Read" ],
+      "stages" : [ {
+        "name" : "Read",
+        "display" : {
+          "position" : {
+            "x" : 240,
+            "y" : 0
+          }
+        },
+        "config" : {
+          "type" : ".ReadConfig",
+          "failureOutputs" : [ ],
+          "reference" : {
+            "type" : "Input",
+            "name" : "getCCDEvents",
+            "path" : "",
+            "params" : { },
+            "connectionName" : "CCDeventDB"
+          }
+        },
+        "outputs" : [ "Return" ]
+      }, {
+        "name" : "Return",
+        "display" : {
+          "position" : {
+            "x" : 690,
+            "y" : 0
+          }
+        },
+        "config" : {
+          "type" : ".ReturnConfig"
+        },
+        "outputs" : [ ]
+      } ],
+      "trackActivity" : false,
+      "triggers" : [ {
+        "name" : "APITrigger",
+        "display" : {
+          "position" : {
+            "x" : -450,
+            "y" : 0
+          }
+        },
+        "config" : {
+          "type" : ".TriggerApi",
+          "enabled" : true,
+          "parameters" : {
+            "type" : "EmptyParameters"
+          }
+        }
+      } ],
+      "errorHandler" : {
+        "type" : "default"
+      }
+    }, {
+      "name" : "insertCCDEvent",
+      "description" : "Used to update the weight information for a certain silo.",
+      "groupAs" : "/CCD",
+      "tags" : [ "CCD" ],
+      "inputStages" : [ "Write" ],
+      "stages" : [ {
+        "name" : "Write",
+        "display" : {
+          "position" : {
+            "x" : 240,
+            "y" : 0
+          }
+        },
+        "config" : {
+          "type" : ".WriteConfig",
+          "failureOutputs" : [ ],
+          "references" : [ "{{Connection.CCDeventDB.insertCCDEvent}}" ],
+          "writeReturn" : "completion"
+        },
+        "outputs" : [ ]
+      } ],
+      "trackActivity" : true,
+      "triggers" : [ {
+        "name" : "APITrigger",
+        "display" : {
+          "position" : {
+            "x" : -483,
+            "y" : 3
+          }
+        },
+        "config" : {
+          "type" : ".TriggerApi",
+          "enabled" : true,
+          "parameters" : {
+            "type" : "inline",
+            "model" : {
+              "name" : "params",
+              "tags" : [ ],
+              "attributes" : [ {
+                "attributeType" : "Internal",
+                "name" : "encoderValue",
+                "nullable" : false,
+                "required" : false,
+                "array" : false,
+                "internalType" : "Int16"
+              }, {
+                "attributeType" : "Internal",
+                "name" : "result",
+                "nullable" : false,
+                "required" : false,
+                "array" : false,
+                "internalType" : "String"
+              }, {
+                "attributeType" : "Internal",
+                "name" : "NOKReason",
+                "nullable" : false,
+                "required" : false,
+                "array" : false,
+                "internalType" : "String"
+              }, {
+                "attributeType" : "Internal",
+                "name" : "CCDsource",
+                "nullable" : false,
+                "required" : false,
+                "array" : false,
+                "internalType" : "String"
+              }, {
+                "attributeType" : "Internal",
+                "name" : "timestamp",
+                "nullable" : false,
+                "required" : false,
+                "array" : false,
+                "internalType" : "String"
+              } ]
+            }
+          }
+        }
+      } ],
+      "errorHandler" : {
+        "type" : "default"
+      }
+    } ],
+    "namespace" : [ ]
+  },
+  "network" : {
+    "groups" : [ ],
+    "hubs" : [ ]
+  }
+}
