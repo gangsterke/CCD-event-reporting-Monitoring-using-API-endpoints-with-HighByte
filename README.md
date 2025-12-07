@@ -9,14 +9,11 @@ A node-red flow to generate CCD events and a dashboard
 A professional, real-time HMI (Human-Machine Interface) web application for monitoring and visualizing CCD (Charge-Coupled Device) inspection events in industrial production environments.
 In the configuration section you select the base URL, the method and the API key.
 
-<img width="1496" height="865" alt="image" src="https://github.com/user-attachments/assets/0a1d3eaa-8ca7-4ad8-979a-ece81f4b17cf" />
-
-<img width="1388" height="809" alt="image" src="https://github.com/user-attachments/assets/b748b181-cfd6-4260-85d7-60eb0cd3ab7a" />
-
+<img width="1014" height="831" alt="image" src="https://github.com/user-attachments/assets/fdc4ea6a-68b5-40c9-a769-950d6974094a" />
 
 ## 🎯 Overview
 
-The CCD Events Monitor provides a modern, business-professional interface for tracking quality control events from multiple CCD systems. It features synchronized timeline visualizations, real-time data updates, and comprehensive event tracking to help operators and engineers monitor production quality at a glance.
+The CCD Events Monitor provides an interface for tracking quality control events from multiple measurement systems (CCD cameras in this case). It features synchronized timeline visualizations, real-time data updates, and comprehensive event tracking to help operators and engineers monitor production quality at a glance.
 
 ## ✨ Key Features
 
