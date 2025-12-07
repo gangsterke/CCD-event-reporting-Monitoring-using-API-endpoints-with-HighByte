@@ -1,0 +1,528 @@
+[
+    {
+        "id": "95e8fcb9c4a5900c",
+        "type": "tab",
+        "label": "HTTP POST to Highbyte",
+        "disabled": false,
+        "info": "",
+        "env": []
+    },
+    {
+        "id": "55934b149427eea3",
+        "type": "inject",
+        "z": "95e8fcb9c4a5900c",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 180,
+        "y": 80,
+        "wires": [
+            [
+                "2ebf884f941f6ed8",
+                "fda431694059b7c9"
+            ]
+        ]
+    },
+    {
+        "id": "6be134188b9f1d54",
+        "type": "http request",
+        "z": "95e8fcb9c4a5900c",
+        "name": "",
+        "method": "use",
+        "ret": "txt",
+        "paytoqs": "ignore",
+        "url": "",
+        "tls": "",
+        "persist": false,
+        "proxy": "",
+        "insecureHTTPParser": false,
+        "authType": "bearer",
+        "senderr": false,
+        "headers": [],
+        "x": 750,
+        "y": 80,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "3ca9338f0aa4a5b4",
+        "type": "change",
+        "z": "95e8fcb9c4a5900c",
+        "name": "Method and URL",
+        "rules": [
+            {
+                "t": "set",
+                "p": "url",
+                "pt": "msg",
+                "to": "http://127.0.0.1:8885/data/v1/pipelines/insertCCDEvent/value",
+                "tot": "str"
+            },
+            {
+                "t": "set",
+                "p": "method",
+                "pt": "msg",
+                "to": "POST",
+                "tot": "str"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 550,
+        "y": 80,
+        "wires": [
+            [
+                "6be134188b9f1d54"
+            ]
+        ]
+    },
+    {
+        "id": "2ebf884f941f6ed8",
+        "type": "function",
+        "z": "95e8fcb9c4a5900c",
+        "name": "function 2",
+        "func": "// Get previous value (default 0 if none stored yet)\nlet encoderValue = flow.get('encoderValue') || 0;\n\n// Increase by 1\nencoderValue++;\n\n// Save updated value back to flow context\nflow.set('encoderValue', encoderValue);\n\n// Create readable UTC timestamp\nlet now = new Date();\nlet timestamp = now.toISOString().replace('T', ' ').replace('Z', ' UTC');\n\n// Build payload\nmsg.payload = {\n    encoderValue: encoderValue,\n    result: \"OK\",\n    NOKReason: \"000\",\n    timestamp: timestamp,\n    CCDsource: \"CCD1\"\n};\n\nreturn msg;\n",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 360,
+        "y": 80,
+        "wires": [
+            [
+                "3ca9338f0aa4a5b4"
+            ]
+        ]
+    },
+    {
+        "id": "sq",
+        "type": "sqlite",
+        "z": "95e8fcb9c4a5900c",
+        "mydb": "1e915358237a9ac0",
+        "sqlquery": "prepared",
+        "sql": "SELECT encoderValue, result, NOKReason, timestamp,CCDsource FROM tblCCD1events WHERE (CCDsource = \"CCD1\") ORDER BY encoderValue ASC;",
+        "name": "Read CCD1 Events",
+        "x": 630,
+        "y": 120,
+        "wires": [
+            [
+                "transform",
+                "d7ae9b29819d32b4"
+            ]
+        ]
+    },
+    {
+        "id": "transform",
+        "type": "function",
+        "z": "95e8fcb9c4a5900c",
+        "name": "Build Chart Data",
+        "func": "let rows = msg.payload;\n\nif (!rows || rows.length === 0) {\n    return null;\n}\n\n// Create clean data array\nlet chartData = [];\n\nrows.forEach(row => {\n    chartData.push({\n        x: Number(row.encodervalue),  // Ensure it's a number\n        y: 0.5,\n        series: String(row.result)    // Ensure it's a string\n    });\n});\n\nnode.warn(\"Total rows: \" + chartData.length);\nnode.warn(\"X min: \" + Math.min(...chartData.map(d => d.x)));\nnode.warn(\"X max: \" + Math.max(...chartData.map(d => d.x)));\n\nmsg.payload = chartData;\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": "",
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 850,
+        "y": 120,
+        "wires": [
+            [
+                "chart"
+            ]
+        ]
+    },
+    {
+        "id": "chart",
+        "type": "ui-chart",
+        "z": "95e8fcb9c4a5900c",
+        "group": "96404aeadf363f6f",
+        "name": "CCD1 Results",
+        "label": "CCD1 Encoder Results",
+        "order": 1,
+        "chartType": "scatter",
+        "category": "series",
+        "categoryType": "property",
+        "xAxisLabel": "",
+        "xAxisProperty": "x",
+        "xAxisPropertyType": "property",
+        "xAxisType": "linear",
+        "xAxisFormat": "",
+        "xAxisFormatType": "auto",
+        "yAxisLabel": "",
+        "yAxisProperty": "y",
+        "ymin": "0",
+        "ymax": "0.6",
+        "stackSeries": false,
+        "pointShape": "circle",
+        "pointRadius": "2",
+        "showLegend": true,
+        "removeOlder": "1",
+        "removeOlderUnit": "3600",
+        "removeOlderPoints": "100",
+        "colors": [
+            "#fb0e26",
+            "#21f312",
+            "#ff7f0e",
+            "#2ca02c",
+            "#98df8a",
+            "#d62728",
+            "#ff9896",
+            "#9467bd",
+            "#c5b0d5"
+        ],
+        "textColor": [
+            "#666666"
+        ],
+        "textColorDefault": true,
+        "gridColor": [
+            "#e5e5e5"
+        ],
+        "gridColorDefault": true,
+        "width": 12,
+        "height": 6,
+        "className": "",
+        "x": 1080,
+        "y": 120,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "fda431694059b7c9",
+        "type": "function",
+        "z": "95e8fcb9c4a5900c",
+        "name": "Display Roaster Data",
+        "func": "msg.params = {};\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 400,
+        "y": 120,
+        "wires": [
+            [
+                "sq"
+            ]
+        ]
+    },
+    {
+        "id": "4ccd0f82a885f9fe",
+        "type": "inject",
+        "z": "95e8fcb9c4a5900c",
+        "name": "",
+        "props": [
+            {
+                "p": "payload"
+            }
+        ],
+        "repeat": "",
+        "crontab": "",
+        "once": false,
+        "onceDelay": 0.1,
+        "topic": "",
+        "payload": "",
+        "payloadType": "date",
+        "x": 180,
+        "y": 200,
+        "wires": [
+            [
+                "95595253c947a4d8",
+                "f89ad308a2cefc39"
+            ]
+        ]
+    },
+    {
+        "id": "ea364afd05dda477",
+        "type": "http request",
+        "z": "95e8fcb9c4a5900c",
+        "name": "",
+        "method": "use",
+        "ret": "txt",
+        "paytoqs": "ignore",
+        "url": "",
+        "tls": "",
+        "persist": false,
+        "proxy": "",
+        "insecureHTTPParser": false,
+        "authType": "bearer",
+        "senderr": false,
+        "headers": [],
+        "x": 750,
+        "y": 200,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "7b799567075ccc7b",
+        "type": "change",
+        "z": "95e8fcb9c4a5900c",
+        "name": "Method and URL",
+        "rules": [
+            {
+                "t": "set",
+                "p": "url",
+                "pt": "msg",
+                "to": "http://127.0.0.1:8885/data/v1/pipelines/insertCCDEvent/value",
+                "tot": "str"
+            },
+            {
+                "t": "set",
+                "p": "method",
+                "pt": "msg",
+                "to": "POST",
+                "tot": "str"
+            }
+        ],
+        "action": "",
+        "property": "",
+        "from": "",
+        "to": "",
+        "reg": false,
+        "x": 550,
+        "y": 200,
+        "wires": [
+            [
+                "ea364afd05dda477"
+            ]
+        ]
+    },
+    {
+        "id": "95595253c947a4d8",
+        "type": "function",
+        "z": "95e8fcb9c4a5900c",
+        "name": "function 3",
+        "func": "// Get previous value (default 0 if none stored yet)\nlet encoderValue = flow.get('encoderValue') || 0;\n\n// Increase by 1\nencoderValue++;\n\n// Save updated value back to flow context\nflow.set('encoderValue', encoderValue);\n\n// Create readable UTC timestamp\nlet now = new Date();\nlet timestamp = now.toISOString().replace('T', ' ').replace('Z', ' UTC');\n\n// Build payload\nmsg.payload = {\n    encoderValue: encoderValue,\n    result: \"NOK\",\n    NOKReason: \"001\",\n    timestamp: timestamp,\n    CCDsource: \"CCD2\"\n};\n\nreturn msg;\n",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 360,
+        "y": 200,
+        "wires": [
+            [
+                "7b799567075ccc7b"
+            ]
+        ]
+    },
+    {
+        "id": "b7c8e206a3b601ef",
+        "type": "sqlite",
+        "z": "95e8fcb9c4a5900c",
+        "mydb": "1e915358237a9ac0",
+        "sqlquery": "prepared",
+        "sql": "SELECT encoderValue, result, NOKReason, timestamp, CCDsource FROM tblCCD1events WHERE (CCDsource = \"CCD2\") ORDER BY encoderValue ASC;",
+        "name": "Read CCD1 Events",
+        "x": 630,
+        "y": 240,
+        "wires": [
+            [
+                "2fe9e86e8a7422fa"
+            ]
+        ]
+    },
+    {
+        "id": "2fe9e86e8a7422fa",
+        "type": "function",
+        "z": "95e8fcb9c4a5900c",
+        "name": "Build Chart Data",
+        "func": "let rows = msg.payload;\n\nif (!rows || rows.length === 0) {\n    return null;\n}\n\n// Create clean data array\nlet chartData = [];\n\nrows.forEach(row => {\n    chartData.push({\n        x: Number(row.encodervalue),  // Ensure it's a number\n        y: 0.5,\n        series: String(row.result)    // Ensure it's a string\n    });\n});\n\nnode.warn(\"Total rows: \" + chartData.length);\nnode.warn(\"X min: \" + Math.min(...chartData.map(d => d.x)));\nnode.warn(\"X max: \" + Math.max(...chartData.map(d => d.x)));\n\nmsg.payload = chartData;\n\nreturn msg;",
+        "outputs": 1,
+        "timeout": "",
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 850,
+        "y": 240,
+        "wires": [
+            [
+                "94e557cdba6d6fe0"
+            ]
+        ]
+    },
+    {
+        "id": "f89ad308a2cefc39",
+        "type": "function",
+        "z": "95e8fcb9c4a5900c",
+        "name": "Display Roaster Data",
+        "func": "msg.params = {};\nreturn msg;",
+        "outputs": 1,
+        "timeout": 0,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 400,
+        "y": 240,
+        "wires": [
+            [
+                "b7c8e206a3b601ef"
+            ]
+        ]
+    },
+    {
+        "id": "94e557cdba6d6fe0",
+        "type": "ui-chart",
+        "z": "95e8fcb9c4a5900c",
+        "group": "96404aeadf363f6f",
+        "name": "CCD2 Results",
+        "label": "CCD2 Encoder Results",
+        "order": 2,
+        "chartType": "scatter",
+        "category": "series",
+        "categoryType": "property",
+        "xAxisLabel": "",
+        "xAxisProperty": "x",
+        "xAxisPropertyType": "property",
+        "xAxisType": "linear",
+        "xAxisFormat": "",
+        "xAxisFormatType": "auto",
+        "yAxisLabel": "",
+        "yAxisProperty": "y",
+        "ymin": "0",
+        "ymax": "0.6",
+        "stackSeries": false,
+        "pointShape": "circle",
+        "pointRadius": "2",
+        "showLegend": true,
+        "removeOlder": "1",
+        "removeOlderUnit": "3600",
+        "removeOlderPoints": "100",
+        "colors": [
+            "#fb0e26",
+            "#21f312",
+            "#ff7f0e",
+            "#2ca02c",
+            "#98df8a",
+            "#d62728",
+            "#ff9896",
+            "#9467bd",
+            "#c5b0d5"
+        ],
+        "textColor": [
+            "#666666"
+        ],
+        "textColorDefault": true,
+        "gridColor": [
+            "#e5e5e5"
+        ],
+        "gridColorDefault": true,
+        "width": 12,
+        "height": 6,
+        "className": "",
+        "x": 1080,
+        "y": 240,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "d7ae9b29819d32b4",
+        "type": "debug",
+        "z": "95e8fcb9c4a5900c",
+        "name": "debug 11",
+        "active": true,
+        "tosidebar": true,
+        "console": false,
+        "tostatus": false,
+        "complete": "true",
+        "targetType": "full",
+        "statusVal": "",
+        "statusType": "auto",
+        "x": 940,
+        "y": 200,
+        "wires": []
+    },
+    {
+        "id": "1e915358237a9ac0",
+        "type": "sqlitedb",
+        "db": "C:\\Users\\koen_\\CCDeventlogDB.db",
+        "mode": "RWC"
+    },
+    {
+        "id": "96404aeadf363f6f",
+        "type": "ui-group",
+        "name": "Group Name",
+        "page": "f5b90dfb902e0ba3",
+        "width": "12",
+        "height": 1,
+        "order": 1,
+        "showTitle": true,
+        "className": "",
+        "visible": "true",
+        "disabled": "false"
+    },
+    {
+        "id": "f5b90dfb902e0ba3",
+        "type": "ui-page",
+        "name": "ccd",
+        "ui": "c543e1a2e73adda3",
+        "path": "/page11",
+        "icon": "home",
+        "layout": "grid",
+        "theme": "38050ee480209835",
+        "order": 1,
+        "className": "",
+        "visible": "true",
+        "disabled": "false"
+    },
+    {
+        "id": "c543e1a2e73adda3",
+        "type": "ui-base",
+        "name": "UI Name",
+        "path": "/dashboard",
+        "includeClientData": true,
+        "acceptsClientConfig": [
+            "ui-notification",
+            "ui-control"
+        ],
+        "showPathInSidebar": false
+    },
+    {
+        "id": "38050ee480209835",
+        "type": "ui-theme",
+        "name": "Cordier",
+        "colors": {
+            "surface": "#ffffff",
+            "primary": "#0cb656",
+            "bgPage": "#eeeeee",
+            "groupBg": "#ffffff",
+            "groupOutline": "#cccccc"
+        },
+        "sizes": {
+            "pagePadding": "12px",
+            "groupGap": "12px",
+            "groupBorderRadius": "4px",
+            "widgetGap": "12px"
+        }
+    },
+    {
+        "id": "6cb809efe563c5dd",
+        "type": "global-config",
+        "env": [],
+        "modules": {
+            "node-red-node-sqlite": "1.1.0",
+            "@flowfuse/node-red-dashboard": "1.16.0"
+        }
+    }
+]
