@@ -42,25 +42,6 @@ The CCD Events Monitor provides an interface for tracking quality control events
 
 ## 🚀 Getting Started
 
-### Prerequisites
-
-- A web browser (Chrome, Firefox, Edge, Safari)
-- Access to a data pipeline endpoint that provides CCD events
-
-### Installation
-
-1. Clone the repository:
-```bash
-git clone https://github.com/gangsterke/CCD-event-reporting-Monitoring-using-API-endpoints-with-HighByte.git
-```
-
-2. Open `ccd-events-hmi.html` in your web browser:
-```bash
-start ccd-events-hmi.html
-```
-
-3. Configure your data source in the application settings.
-
 ### Configuration
 
 1. Click on **⚙️ Configuration** to expand the settings panel
@@ -142,7 +123,7 @@ Quick statistics at the top of each panel:
 ### Endpoint Requirements
 
 Your data endpoint should:
-- Accept POST or GET requests
+- Accept POST requests
 - Return JSON array of event objects
 - Support optional bearer token authentication
 - Respond within reasonable time (< 2 seconds recommended)
@@ -156,43 +137,3 @@ curl -X POST http://127.0.0.1:8885/data/v1/pipelines/getCCDEvents/value \
   -H "Authorization: Bearer YOUR_TOKEN_HERE" \
   -d '{}'
 
-# GET request
-curl -X GET http://127.0.0.1:8885/data/v1/pipelines/getCCDEvents/value \
-  -H "Authorization: Bearer YOUR_TOKEN_HERE"
-```
-
-## 🛠️ Customization
-
-### Changing Refresh Rate
-
-Edit the `REFRESH_RATE` constant in the HTML file (default: 5000ms):
-
-```javascript
-const REFRESH_RATE = 5000; // 5 seconds
-```
-
-### Styling
-
-The application uses a modern gradient color scheme. To customize:
-
-1. Locate the CSS section in `ccd-events-hmi.html`
-2. Modify color variables:
-```css
-/* Header gradient */
-background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-
-/* OK color */
-background: #48bb78;
-
-/* NOK color */
-background: #f56565;
-```
-
-
-## 🐛 Troubleshooting
-
-
-## 👥 Authors
-
-
-**Built with ❤️ for industrial quality control**
