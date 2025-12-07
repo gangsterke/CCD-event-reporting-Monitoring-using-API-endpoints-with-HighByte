@@ -2,9 +2,16 @@
 
 Provide two API endpoints. One to record CCD events and one to get all CCD events.
 
-![alt text](image.png)     
+ <img width="1259" height="353" alt="image" src="https://github.com/user-attachments/assets/ff5f0fc9-a487-40c3-8fc3-05f37d068d22" />
+
+A node-red flow to generate CCD events and a dashboard 
 
 A professional, real-time HMI (Human-Machine Interface) web application for monitoring and visualizing CCD (Charge-Coupled Device) inspection events in industrial production environments.
+In the configuration section you select the base URL, the method and the API key.
+
+<img width="1496" height="865" alt="image" src="https://github.com/user-attachments/assets/0a1d3eaa-8ca7-4ad8-979a-ece81f4b17cf" />
+
+<img width="1388" height="809" alt="image" src="https://github.com/user-attachments/assets/b748b181-cfd6-4260-85d7-60eb0cd3ab7a" />
 
 
 ## 🎯 Overview
