@@ -13,8 +13,10 @@ Or events can also be inserted via Postman
 <img width="898" height="559" alt="image" src="https://github.com/user-attachments/assets/1c2b8146-b006-469f-acde-fcdfdf6a04b2" />
 
 Events are stored in a SQLite database. Command to create DB: 
-create table tblCCD1events(encoderValue int, result varchar(5),NOKReason varchar(20),timestamp varchar(20), CCDsource varchar(20));
 
+<img width="1282" height="408" alt="image" src="https://github.com/user-attachments/assets/24c97d26-7c5b-47af-9617-92afdba29e92" />
+
+create table tblCCD1events(encoderValue int, result varchar(5),NOKReason varchar(20),timestamp varchar(20), CCDsource varchar(20));
 
 A professional, real-time HMI (Human-Machine Interface) web application for monitoring and visualizing CCD (Charge-Coupled Device) inspection events in industrial production environments.
 In the configuration section you select the base URL, the method and the API key.
