@@ -1,0 +1,1273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CCD Events Monitor</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #2d3748 0%, #1a202c 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: white;
+            padding: 20px 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            color: #2d3748;
+            font-size: 28px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .header-icon {
+            width: 36px;
+            height: 36px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 20px;
+        }
+
+        .status-bar {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .status-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #4a5568;
+            font-size: 14px;
+        }
+
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #48bb78;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .config-panel {
+            background: white;
+            padding: 20px 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+
+        .config-toggle {
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #2d3748;
+            font-weight: 600;
+            margin-bottom: 15px;
+        }
+
+        .config-toggle:hover {
+            color: #667eea;
+        }
+
+        .config-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+        }
+
+        .config-content.open {
+            max-height: 300px;
+        }
+
+        .config-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .config-group label {
+            color: #4a5568;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .config-group input {
+            padding: 10px 12px;
+            border: 2px solid #e2e8f0;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: border-color 0.2s;
+        }
+
+        .config-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .ccd-panels {
+            display: grid;
+            gap: 20px;
+        }
+
+        .ccd-panel {
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+
+        .panel-header {
+            background: #764ba2;
+            color: white;
+            padding: 20px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .panel-title {
+            font-size: 20px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .panel-stats {
+            display: flex;
+            gap: 20px;
+        }
+
+        .stat {
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            opacity: 0.9;
+        }
+
+        .panel-body {
+            padding: 30px;
+        }
+
+        .ccd-selector {
+            margin-bottom: 20px;
+        }
+
+        .ccd-selector label {
+            display: block;
+            color: #4a5568;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .ccd-selector select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 14px;
+            background: white;
+            cursor: pointer;
+            transition: border-color 0.2s;
+        }
+
+        .ccd-selector select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .ccd-selector select:hover {
+            border-color: #cbd5e0;
+        }
+
+        .timeline-container {
+            margin-top: 20px;
+            background: #f7fafc;
+            border-radius: 8px;
+            padding: 20px;
+            overflow-x: auto;
+        }
+
+        .timeline-wrapper {
+            position: relative;
+            min-width: 100%;
+        }
+
+        .timeline-row {
+            position: relative;
+            height: 80px;
+            margin-bottom: 30px;
+        }
+
+        .timeline-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .timeline-label-left {
+            position: absolute;
+            left: -80px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-weight: 600;
+            color: #2d3748;
+            font-size: 14px;
+            width: 70px;
+            text-align: right;
+        }
+
+        .timeline-track {
+            position: relative;
+            height: 40px;
+            background: white;
+            border-radius: 6px;
+            border: 2px solid #e2e8f0;
+            overflow: hidden;
+        }
+
+        .timeline-segment {
+            position: absolute;
+            height: 100%;
+            top: 0;
+            cursor: pointer;
+            transition: opacity 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            font-size: 13px;
+            overflow: hidden;
+        }
+
+        .timeline-segment:hover {
+            opacity: 0.85;
+            z-index: 10;
+        }
+
+        .timeline-segment.ok {
+            background: #48bb78;
+        }
+
+        .timeline-segment.nok {
+            background: #f56565;
+        }
+
+        .timeline-segment .segment-count {
+            white-space: nowrap;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+        }
+
+        .timeline-axis {
+            position: relative;
+            height: 40px;
+            margin-top: 10px;
+            border-top: 2px solid #cbd5e0;
+        }
+
+        .timeline-tick {
+            position: absolute;
+            top: -5px;
+            width: 2px;
+            height: 10px;
+            background: #cbd5e0;
+        }
+
+        .timeline-tick-label {
+            position: absolute;
+            top: 15px;
+            font-size: 12px;
+            color: #4a5568;
+            transform: translateX(-50%);
+            font-weight: 500;
+        }
+
+        .timeline-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 15px;
+            padding-left: 90px;
+        }
+
+        .tooltip {
+            position: fixed;
+            background: rgba(0, 0, 0, 0.9);
+            color: white;
+            padding: 10px 15px;
+            border-radius: 6px;
+            font-size: 13px;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.2s;
+            z-index: 1000;
+            max-width: 300px;
+        }
+
+        .tooltip.show {
+            opacity: 1;
+        }
+
+        .tooltip-row {
+            display: flex;
+            justify-content: space-between;
+            gap: 15px;
+            margin: 3px 0;
+        }
+
+        .tooltip-label {
+            font-weight: 600;
+        }
+
+        .tooltip {
+            position: fixed;
+            background: rgba(0, 0, 0, 0.9);
+            color: white;
+            padding: 10px 15px;
+            border-radius: 6px;
+            font-size: 13px;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.2s;
+            z-index: 1000;
+            max-width: 300px;
+        }
+
+        .tooltip.show {
+            opacity: 1;
+        }
+
+        .tooltip-row {
+            display: flex;
+            justify-content: space-between;
+            gap: 15px;
+            margin: 3px 0;
+        }
+
+        .tooltip-label {
+            font-weight: 600;
+        }
+
+        .events-table {
+            margin-top: 20px;
+            max-height: 300px;
+            overflow-y: auto;
+            border-radius: 8px;
+            border: 1px solid #e2e8f0;
+        }
+
+        .events-table table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .events-table th {
+            background: #f7fafc;
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+            color: #2d3748;
+            position: sticky;
+            top: 0;
+            border-bottom: 2px solid #e2e8f0;
+        }
+
+        .events-table td {
+            padding: 12px;
+            border-bottom: 1px solid #e2e8f0;
+            color: #4a5568;
+        }
+
+        .events-table tr:hover {
+            background: #f7fafc;
+        }
+
+        .result-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .result-badge.ok {
+            background: #c6f6d5;
+            color: #22543d;
+        }
+
+        .result-badge.nok {
+            background: #fed7d7;
+            color: #742a2a;
+        }
+
+        .no-data {
+            text-align: center;
+            padding: 60px 20px;
+            color: #718096;
+            font-size: 16px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #4a5568;
+        }
+
+        .spinner {
+            border: 3px solid #e2e8f0;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .error-message {
+            background: #fed7d7;
+            color: #742a2a;
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+            border-left: 4px solid #f56565;
+        }
+
+        .status-bar-container {
+            margin-bottom: 20px;
+        }
+
+        .status-bar-label {
+            font-size: 14px;
+            color: #4a5568;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+
+        .status-bar-chart {
+            display: flex;
+            height: 40px;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .status-bar-segment {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            font-size: 14px;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .status-bar-segment:hover {
+            filter: brightness(1.1);
+            transform: scaleY(1.1);
+            z-index: 1;
+        }
+
+        .status-bar-segment.ok {
+            background: #48bb78;
+        }
+
+        .status-bar-segment.nok {
+            background: #f56565;
+        }
+
+        .status-bar-segment .segment-label {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .status-bar-legend {
+            display: flex;
+            gap: 20px;
+            margin-top: 8px;
+            font-size: 13px;
+            color: #4a5568;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .legend-color {
+            width: 16px;
+            height: 16px;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>
+                <div class="header-icon">📊</div>
+                CCD Events Monitor
+            </h1>
+            <div class="status-bar">
+                <div class="status-item">
+                    <div class="status-dot"></div>
+                    <span>Live</span>
+                </div>
+                <div class="status-item">
+                    🔄 <span id="lastUpdate">Never</span>
+                </div>
+                <div class="status-item">
+                    📡 <span id="eventCount">0</span> Events
+                </div>
+            </div>
+        </div>
+
+        <div class="config-panel">
+            <div class="ccd-selector">
+                <label for="ccdSelect">Select CCD Source</label>
+                <select id="ccdSelect" onchange="filterByCCD()">
+                    <option value="all">All CCD Sources</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="config-panel">
+            <div class="config-toggle" onclick="toggleConfig()">
+                ⚙️ Configuration
+                <span id="configArrow">▼</span>
+            </div>
+            <div class="config-content" id="configContent">
+                <div class="config-group">
+                    <label for="baseUrl">Base URL</label>
+                    <input type="text" id="baseUrl" value="http://127.0.0.1:8885" placeholder="http://127.0.0.1:8885">
+                </div>
+                <div class="config-group">
+                    <label for="bearerToken">Bearer Token (Optional)</label>
+                    <input type="password" id="bearerToken" placeholder="Enter bearer token">
+                </div>
+                <div class="config-group">
+                    <label for="httpMethod">HTTP Method</label>
+                    <select id="httpMethod" style="padding: 10px 12px; border: 2px solid #e2e8f0; border-radius: 6px; font-size: 14px;">
+                        <option value="POST">POST</option>
+                        <option value="GET">GET</option>
+                    </select>
+                </div>
+                <div class="config-group">
+                    <label for="endpointPath">Endpoint Path</label>
+                    <input type="text" id="endpointPath" value="/data/v1/pipelines/getCCDEvents/value" placeholder="/data/v1/pipelines/getCCDEvents/value">
+                </div>
+            </div>
+        </div>
+
+        <div class="ccd-panels" id="ccdPanels">
+            <div class="loading">
+                <div class="spinner"></div>
+                Loading CCD events...
+            </div>
+        </div>
+    </div>
+
+    <div class="tooltip" id="tooltip"></div>
+
+    <script>
+        let updateInterval;
+        const REFRESH_RATE = 5000; // 5 seconds
+
+        function toggleConfig() {
+            const content = document.getElementById('configContent');
+            const arrow = document.getElementById('configArrow');
+            content.classList.toggle('open');
+            arrow.textContent = content.classList.contains('open') ? '▲' : '▼';
+        }
+
+        function getHeaders() {
+            const headers = {
+                'Content-Type': 'application/json'
+            };
+            const token = document.getElementById('bearerToken').value.trim();
+            if (token) {
+                headers['Authorization'] = `Bearer ${token}`;
+            }
+            return headers;
+        }
+
+        async function fetchCCDEvents() {
+            const baseUrl = document.getElementById('baseUrl').value.trim();
+            const endpointPath = document.getElementById('endpointPath').value.trim();
+            const httpMethod = document.getElementById('httpMethod').value;
+            const url = `${baseUrl}${endpointPath}`;
+
+            try {
+                const fetchOptions = {
+                    method: httpMethod,
+                    headers: getHeaders()
+                };
+
+                // Only add body for POST/PUT requests
+                if (httpMethod === 'POST' || httpMethod === 'PUT') {
+                    fetchOptions.body = JSON.stringify({});
+                }
+
+                const response = await fetch(url, fetchOptions);
+
+                if (!response.ok) {
+                    let errorMessage = `HTTP ${response.status}: ${response.statusText}`;
+                    try {
+                        const errorData = await response.text();
+                        if (errorData) {
+                            errorMessage += `\n${errorData}`;
+                        }
+                    } catch (e) {
+                        // Ignore if can't read error body
+                    }
+                    throw new Error(errorMessage);
+                }
+
+                const data = await response.json();
+                return data;
+            } catch (error) {
+                console.error('Error fetching CCD events:', error);
+                throw error;
+            }
+        }
+
+        function groupEventsBySource(events) {
+            const groups = {};
+            
+            events.forEach(event => {
+                const source = event.CCDsource || 'Default CCD';
+                if (!groups[source]) {
+                    groups[source] = [];
+                }
+                groups[source].push(event);
+            });
+
+            return groups;
+        }
+
+        function calculateStats(events) {
+            const ok = events.filter(e => e.result === 'OK').length;
+            const nok = events.filter(e => e.result === 'NOK').length;
+            const total = events.length;
+            const successRate = total > 0 ? ((ok / total) * 100).toFixed(1) : 0;
+
+            return { ok, nok, total, successRate };
+        }
+
+        function getGlobalEncoderRange(groupedEvents) {
+            let minEncoder = Infinity;
+            let maxEncoder = -Infinity;
+
+            Object.values(groupedEvents).forEach(events => {
+                events.forEach(event => {
+                    if (event.encoderValue < minEncoder) minEncoder = event.encoderValue;
+                    if (event.encoderValue > maxEncoder) maxEncoder = event.encoderValue;
+                });
+            });
+
+            return { minEncoder, maxEncoder, range: maxEncoder - minEncoder || 1 };
+        }
+
+        function renderSynchronizedTimelines(groupedEvents) {
+            const sources = Object.keys(groupedEvents).sort();
+            if (sources.length === 0) {
+                return '<div class="no-data">No events to display</div>';
+            }
+
+            const { minEncoder, maxEncoder, range } = getGlobalEncoderRange(groupedEvents);
+
+            let html = '<div class="timeline-container">';
+            html += '<div class="timeline-title">CCD Events Timeline - Synchronized View</div>';
+            html += '<div class="timeline-wrapper" style="padding-left: 90px;">';
+
+            // Render each CCD source as a row
+            sources.forEach(source => {
+                const events = groupedEvents[source].sort((a, b) => a.encoderValue - b.encoderValue);
+                html += `<div class="timeline-row">`;
+                html += `<div class="timeline-label-left">${source}</div>`;
+                html += `<div class="timeline-track">`;
+
+                // First, identify groups of consecutive same-result events
+                const groups = [];
+                let i = 0;
+                while (i < events.length) {
+                    const currentResult = events[i].result;
+                    let groupEnd = i;
+                    
+                    // Find consecutive events with same result
+                    while (groupEnd + 1 < events.length && events[groupEnd + 1].result === currentResult) {
+                        groupEnd++;
+                    }
+                    
+                    groups.push({
+                        start: i,
+                        end: groupEnd,
+                        result: currentResult,
+                        count: groupEnd - i + 1
+                    });
+                    
+                    i = groupEnd + 1;
+                }
+
+                // Now render each group as a single segment
+                groups.forEach((group, groupIndex) => {
+                    const startEvent = events[group.start];
+                    const endEvent = events[group.end];
+                    const nextGroup = groups[groupIndex + 1];
+                    
+                    const startPos = ((startEvent.encoderValue - minEncoder) / range) * 100;
+                    let endPos;
+                    
+                    if (nextGroup) {
+                        // Segment extends to the start of next group
+                        endPos = ((events[nextGroup.start].encoderValue - minEncoder) / range) * 100;
+                    } else {
+                        // Last group - extend a bit beyond the last event
+                        endPos = Math.min(((endEvent.encoderValue - minEncoder) / range) * 100 + 2, 100);
+                    }
+                    
+                    const width = endPos - startPos;
+                    const resultClass = group.result === 'OK' ? 'ok' : 'nok';
+                    const icon = group.result === 'OK' ? '✓' : '✗';
+                    
+                    // Only show count if segment is wide enough
+                    const showCount = width > 3;
+                    
+                    html += `
+                        <div class="timeline-segment ${resultClass}" 
+                             style="left: ${startPos}%; width: ${width}%"
+                             onmouseenter="showTimelineGroupTooltip(event, '${source}', ${group.count}, '${group.result}', ${startEvent.encoderValue}, ${endEvent.encoderValue})"
+                             onmouseleave="hideTooltip()">
+                             ${showCount ? `<span class="segment-count">${icon} ${group.count}</span>` : ''}
+                        </div>
+                    `;
+                });
+
+                html += `</div></div>`;
+            });
+
+            // Add shared X-axis at the bottom
+            html += '<div class="timeline-axis">';
+            
+            const numTicks = Math.min(10, range + 1);
+            const step = range / (numTicks - 1);
+            
+            for (let i = 0; i < numTicks; i++) {
+                const value = Math.round(minEncoder + (i * step));
+                const position = ((value - minEncoder) / range) * 100;
+                
+                html += `<div class="timeline-tick" style="left: ${position}%"></div>`;
+                html += `<div class="timeline-tick-label" style="left: ${position}%">${value}</div>`;
+            }
+            
+            html += '</div>';
+            html += '</div></div>';
+
+            return html;
+        }
+
+        function renderSingleTimeline(source, events) {
+            if (events.length === 0) {
+                return '<div class="no-data">No events to display</div>';
+            }
+
+            const sortedEvents = [...events].sort((a, b) => a.encoderValue - b.encoderValue);
+            const minEncoder = Math.min(...sortedEvents.map(e => e.encoderValue));
+            const maxEncoder = Math.max(...sortedEvents.map(e => e.encoderValue));
+            const range = maxEncoder - minEncoder || 1;
+
+            let html = '<div class="timeline-container">';
+            html += `<div class="timeline-title">${source} - Events Timeline</div>`;
+            html += '<div class="timeline-wrapper" style="padding-left: 90px;">';
+
+            html += `<div class="timeline-row">`;
+            html += `<div class="timeline-label-left">${source}</div>`;
+            html += `<div class="timeline-track">`;
+
+            // First, identify groups of consecutive same-result events
+            const groups = [];
+            let i = 0;
+            while (i < sortedEvents.length) {
+                const currentResult = sortedEvents[i].result;
+                let groupEnd = i;
+                
+                // Find consecutive events with same result
+                while (groupEnd + 1 < sortedEvents.length && sortedEvents[groupEnd + 1].result === currentResult) {
+                    groupEnd++;
+                }
+                
+                groups.push({
+                    start: i,
+                    end: groupEnd,
+                    result: currentResult,
+                    count: groupEnd - i + 1
+                });
+                
+                i = groupEnd + 1;
+            }
+
+            // Now render each group as a single segment
+            groups.forEach((group, groupIndex) => {
+                const startEvent = sortedEvents[group.start];
+                const endEvent = sortedEvents[group.end];
+                const nextGroup = groups[groupIndex + 1];
+                
+                const startPos = ((startEvent.encoderValue - minEncoder) / range) * 100;
+                let endPos;
+                
+                if (nextGroup) {
+                    // Segment extends to the start of next group
+                    endPos = ((sortedEvents[nextGroup.start].encoderValue - minEncoder) / range) * 100;
+                } else {
+                    // Last group - extend a bit beyond the last event
+                    endPos = Math.min(((endEvent.encoderValue - minEncoder) / range) * 100 + 2, 100);
+                }
+                
+                const width = endPos - startPos;
+                const resultClass = group.result === 'OK' ? 'ok' : 'nok';
+                const icon = group.result === 'OK' ? '✓' : '✗';
+                
+                // Only show count if segment is wide enough
+                const showCount = width > 3;
+                
+                html += `
+                    <div class="timeline-segment ${resultClass}" 
+                         style="left: ${startPos}%; width: ${width}%"
+                         onmouseenter="showTimelineGroupTooltip(event, '${source}', ${group.count}, '${group.result}', ${startEvent.encoderValue}, ${endEvent.encoderValue})"
+                         onmouseleave="hideTooltip()">
+                         ${showCount ? `<span class="segment-count">${icon} ${group.count}</span>` : ''}
+                    </div>
+                `;
+            });
+
+            html += `</div></div>`;
+
+            // Add X-axis
+            html += '<div class="timeline-axis">';
+            
+            const numTicks = Math.min(10, range + 1);
+            const step = range / (numTicks - 1);
+            
+            for (let i = 0; i < numTicks; i++) {
+                const value = Math.round(minEncoder + (i * step));
+                const position = ((value - minEncoder) / range) * 100;
+                
+                html += `<div class="timeline-tick" style="left: ${position}%"></div>`;
+                html += `<div class="timeline-tick-label" style="left: ${position}%">${value}</div>`;
+            }
+            
+            html += '</div>';
+            html += '</div></div>';
+
+            return html;
+        }
+
+        function showTooltip(event, source, data, isTimeline = false) {
+            const tooltip = document.getElementById('tooltip');
+            const timestamp = new Date(data.timestamp).toLocaleString();
+            
+            tooltip.innerHTML = `
+                <div class="tooltip-row">
+                    <span class="tooltip-label">Source:</span>
+                    <span>${source}</span>
+                </div>
+                <div class="tooltip-row">
+                    <span class="tooltip-label">Encoder:</span>
+                    <span>${data.encoderValue}</span>
+                </div>
+                <div class="tooltip-row">
+                    <span class="tooltip-label">Result:</span>
+                    <span>${data.result}</span>
+                </div>
+                <div class="tooltip-row">
+                    <span class="tooltip-label">Reason:</span>
+                    <span>${data.NOKReason}</span>
+                </div>
+                <div class="tooltip-row">
+                    <span class="tooltip-label">Time:</span>
+                    <span>${timestamp}</span>
+                </div>
+            `;
+
+            tooltip.style.left = event.pageX + 15 + 'px';
+            tooltip.style.top = event.pageY + 15 + 'px';
+            tooltip.classList.add('show');
+        }
+
+        function showTimelineGroupTooltip(event, source, count, result, startEncoder, endEncoder) {
+            const tooltip = document.getElementById('tooltip');
+            
+            tooltip.innerHTML = `
+                <div class="tooltip-row">
+                    <span class="tooltip-label">Source:</span>
+                    <span>${source}</span>
+                </div>
+                <div class="tooltip-row">
+                    <span class="tooltip-label">Result:</span>
+                    <span>${result}</span>
+                </div>
+                <div class="tooltip-row">
+                    <span class="tooltip-label">Count:</span>
+                    <span>${count} event${count > 1 ? 's' : ''}</span>
+                </div>
+                <div class="tooltip-row">
+                    <span class="tooltip-label">Range:</span>
+                    <span>${startEncoder} - ${endEncoder}</span>
+                </div>
+            `;
+
+            tooltip.style.left = event.pageX + 15 + 'px';
+            tooltip.style.top = event.pageY + 15 + 'px';
+            tooltip.classList.add('show');
+        }
+
+        function hideTooltip() {
+            document.getElementById('tooltip').classList.remove('show');
+        }
+
+        function renderEventsTable(events) {
+            if (events.length === 0) {
+                return '';
+            }
+
+            const sortedEvents = [...events].sort((a, b) => b.encoderValue - a.encoderValue);
+            
+            let html = `
+                <div class="events-table">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Encoder Value</th>
+                                <th>Result</th>
+                                <th>NOK Reason</th>
+                                <th>Timestamp</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+            `;
+
+            sortedEvents.forEach(event => {
+                const resultClass = event.result === 'OK' ? 'ok' : 'nok';
+                const timestamp = new Date(event.timestamp).toLocaleString();
+                
+                html += `
+                    <tr>
+                        <td><strong>${event.encoderValue}</strong></td>
+                        <td><span class="result-badge ${resultClass}">${event.result}</span></td>
+                        <td>${event.NOKReason}</td>
+                        <td>${timestamp}</td>
+                    </tr>
+                `;
+            });
+
+            html += `
+                        </tbody>
+                    </table>
+                </div>
+            `;
+
+            return html;
+        }
+
+        function renderStatusBar(stats) {
+            const okPercentage = stats.total > 0 ? (stats.ok / stats.total * 100) : 0;
+            const nokPercentage = stats.total > 0 ? (stats.nok / stats.total * 100) : 0;
+
+            let html = `
+                <div class="status-bar-container">
+                    <div class="status-bar-label">Production Status Overview</div>
+                    <div class="status-bar-chart">
+            `;
+
+            if (stats.ok > 0) {
+                html += `
+                    <div class="status-bar-segment ok" style="width: ${okPercentage}%">
+                        <span class="segment-label">
+                            ${stats.ok > 0 ? `✓ ${stats.ok}` : ''}
+                        </span>
+                    </div>
+                `;
+            }
+
+            if (stats.nok > 0) {
+                html += `
+                    <div class="status-bar-segment nok" style="width: ${nokPercentage}%">
+                        <span class="segment-label">
+                            ${stats.nok > 0 ? `✗ ${stats.nok}` : ''}
+                        </span>
+                    </div>
+                `;
+            }
+
+            html += `
+                    </div>
+                    <div class="status-bar-legend">
+                        <div class="legend-item">
+                            <div class="legend-color" style="background: #48bb78;"></div>
+                            <span>OK: ${stats.ok} (${okPercentage.toFixed(1)}%)</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-color" style="background: #f56565;"></div>
+                            <span>NOK: ${stats.nok} (${nokPercentage.toFixed(1)}%)</span>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            return html;
+        }
+
+        function renderPanels(eventsData) {
+            const groupedEvents = groupEventsBySource(eventsData);
+            const panelsContainer = document.getElementById('ccdPanels');
+            const selectedCCD = document.getElementById('ccdSelect').value;
+            
+            // Update CCD selector dropdown
+            updateCCDSelector(Object.keys(groupedEvents).sort());
+            
+            let html = '';
+
+            if (selectedCCD === 'all') {
+                // Show synchronized timelines for all CCD sources
+                html += renderSynchronizedTimelines(groupedEvents);
+                
+                // Show individual panels for each source
+                Object.keys(groupedEvents).sort().forEach((source, index) => {
+                    const events = groupedEvents[source];
+                    const stats = calculateStats(events);
+
+                    html += `
+                        <div class="ccd-panel" style="margin-top: 20px;">
+                            <div class="panel-header">
+                                <div class="panel-title">
+                                    🎯 ${source}
+                                </div>
+                                <div class="panel-stats">
+                                    <div class="stat">
+                                        <div class="stat-value">${stats.total}</div>
+                                        <div class="stat-label">Total</div>
+                                    </div>
+                                    <div class="stat">
+                                        <div class="stat-value">${stats.ok}</div>
+                                        <div class="stat-label">OK</div>
+                                    </div>
+                                    <div class="stat">
+                                        <div class="stat-value">${stats.nok}</div>
+                                        <div class="stat-label">NOK</div>
+                                    </div>
+                                    <div class="stat">
+                                        <div class="stat-value">${stats.successRate}%</div>
+                                        <div class="stat-label">Success Rate</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="panel-body">
+                                ${renderStatusBar(stats)}
+                                ${renderEventsTable(events)}
+                            </div>
+                        </div>
+                    `;
+                });
+            } else {
+                // Show single CCD source with its own timeline
+                const events = groupedEvents[selectedCCD];
+                if (events) {
+                    const stats = calculateStats(events);
+
+                    html += renderSingleTimeline(selectedCCD, events);
+
+                    html += `
+                        <div class="ccd-panel" style="margin-top: 20px;">
+                            <div class="panel-header">
+                                <div class="panel-title">
+                                    🎯 ${selectedCCD}
+                                </div>
+                                <div class="panel-stats">
+                                    <div class="stat">
+                                        <div class="stat-value">${stats.total}</div>
+                                        <div class="stat-label">Total</div>
+                                    </div>
+                                    <div class="stat">
+                                        <div class="stat-value">${stats.ok}</div>
+                                        <div class="stat-label">OK</div>
+                                    </div>
+                                    <div class="stat">
+                                        <div class="stat-value">${stats.nok}</div>
+                                        <div class="stat-label">NOK</div>
+                                    </div>
+                                    <div class="stat">
+                                        <div class="stat-value">${stats.successRate}%</div>
+                                        <div class="stat-label">Success Rate</div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="panel-body">
+                                ${renderStatusBar(stats)}
+                                ${renderEventsTable(events)}
+                            </div>
+                        </div>
+                    `;
+                }
+            }
+
+            if (html === '') {
+                html = '<div class="no-data">No CCD events found</div>';
+            }
+
+            panelsContainer.innerHTML = html;
+        }
+
+        function updateCCDSelector(sources) {
+            const select = document.getElementById('ccdSelect');
+            const currentValue = select.value;
+            
+            // Clear existing options except "All"
+            select.innerHTML = '<option value="all">All CCD Sources</option>';
+            
+            // Add options for each CCD source
+            sources.forEach(source => {
+                const option = document.createElement('option');
+                option.value = source;
+                option.textContent = source;
+                select.appendChild(option);
+            });
+            
+            // Restore previous selection if it still exists
+            if (currentValue !== 'all' && sources.includes(currentValue)) {
+                select.value = currentValue;
+            }
+        }
+
+        let currentEventsData = [];
+
+        function filterByCCD() {
+            if (currentEventsData.length > 0) {
+                renderPanels(currentEventsData);
+            }
+        }
+
+        async function updateData() {
+            try {
+                const events = await fetchCCDEvents();
+                currentEventsData = events;
+                renderPanels(events);
+                
+                document.getElementById('lastUpdate').textContent = new Date().toLocaleTimeString();
+                document.getElementById('eventCount').textContent = events.length;
+            } catch (error) {
+                const panelsContainer = document.getElementById('ccdPanels');
+                panelsContainer.innerHTML = `
+                    <div class="error-message">
+                        <strong>⚠️ Error loading CCD events:</strong><br>
+                        ${error.message}
+                    </div>
+                `;
+            }
+        }
+
+        function startAutoUpdate() {
+            if (updateInterval) {
+                clearInterval(updateInterval);
+            }
+            
+            updateData(); // Initial load
+            updateInterval = setInterval(updateData, REFRESH_RATE);
+        }
+
+        // Save configuration to localStorage
+        document.getElementById('baseUrl').addEventListener('change', () => {
+            localStorage.setItem('ccd_baseUrl', document.getElementById('baseUrl').value);
+            startAutoUpdate();
+        });
+
+        document.getElementById('bearerToken').addEventListener('change', () => {
+            localStorage.setItem('ccd_bearerToken', document.getElementById('bearerToken').value);
+            startAutoUpdate();
+        });
+
+        document.getElementById('httpMethod').addEventListener('change', () => {
+            localStorage.setItem('ccd_httpMethod', document.getElementById('httpMethod').value);
+            startAutoUpdate();
+        });
+
+        document.getElementById('endpointPath').addEventListener('change', () => {
+            localStorage.setItem('ccd_endpointPath', document.getElementById('endpointPath').value);
+            startAutoUpdate();
+        });
+
+        // Load configuration from localStorage
+        window.addEventListener('load', () => {
+            const savedUrl = localStorage.getItem('ccd_baseUrl');
+            const savedToken = localStorage.getItem('ccd_bearerToken');
+            const savedMethod = localStorage.getItem('ccd_httpMethod');
+            const savedPath = localStorage.getItem('ccd_endpointPath');
+            
+            if (savedUrl) {
+                document.getElementById('baseUrl').value = savedUrl;
+            }
+            if (savedToken) {
+                document.getElementById('bearerToken').value = savedToken;
+            }
+            if (savedMethod) {
+                document.getElementById('httpMethod').value = savedMethod;
+            }
+            if (savedPath) {
+                document.getElementById('endpointPath').value = savedPath;
+            }
+
+            startAutoUpdate();
+        });
+    </script>
+</body>
+</html>
